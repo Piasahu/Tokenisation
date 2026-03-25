@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tokenization Comprehensive Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #06b6d4;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --surface: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f97316;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--bg-darker) 0%, var(--surface) 100%);
+            padding: 2rem 3rem;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 3rem;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background-color: transparent;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button:hover {
+            color: var(--secondary);
+        }
+
+        .tab-button.active {
+            color: var(--secondary);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+            border-radius: 2px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+        }
+
+        .card h3 {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .metric {
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            color: var(--text-primary);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .metric-value.green { color: var(--accent-green); }
+        .metric-value.blue { color: var(--accent-blue); }
+        .metric-value.purple { color: var(--accent-purple); }
+        .metric-value.orange { color: var(--accent-orange); }
+
+        .metric-change {
+            color: var(--accent-green);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .metric-change.negative { color: #ef4444; }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: rgba(6, 182, 212, 0.1);
+            padding: 1rem;
+            text-align: left;
+            color: var(--secondary);
+            font-weight: 700;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.1);
+            color: var(--text-secondary);
+        }
+
+        tr:hover {
+            background-color: rgba(6, 182, 212, 0.05);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(2, 6, 23, 0.5) 100%);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.6);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(2, 6, 23, 0.6) 100%);
+        }
+
+        .feature-card h4 {
+            color: var(--secondary);
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            background-color: rgba(6, 182, 212, 0.2);
+            color: var(--secondary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .badge.green { background-color: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .badge.purple { background-color: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+        .badge.orange { background-color: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .highlight {
+            background: rgba(6, 182, 212, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+        }
+
+        .highlight p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1.5rem; }
+            .header { padding: 1.5rem; }
+            .header h1 { font-size: 1.8rem; }
+            .tabs-container { flex-direction: column; }
+            .tab-button { width: 100%; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .metric-value { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Tokenization Ecosystem Dashboard</h1>
+            <p>Comprehensive insights into Digital Assets, Smart Contracts, DeFi, and Real-World Asset Tokenization</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs-container">
+            <button class="tab-button active" onclick="switchTab('market')">📊 Market Overview</button>
+            <button class="tab-button" onclick="switchTab('tokens')">🪙 Digital Assets & Tokens</button>
+            <button class="tab-button" onclick="switchTab('contracts')">⚙️ Smart Contracts</button>
+            <button class="tab-button" onclick="switchTab('identity')">🔐 Decentralized Identity</button>
+            <button class="tab-button" onclick="switchTab('stablecoins')">💰 Stablecoins</button>
+            <button class="tab-button" onclick="switchTab('rwa')">🏢 Real-World Assets</button>
+        </div>
+
+        <!-- Market Overview Tab -->
+        <div id="market" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Current Market Size (2025)</div>
+                        <div class="metric-value green">$24 B</div>
+                        <div class="metric-change">↑ 308% growth in 3 years</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Conservative Projection (2030)</div>
+                        <div class="metric-value blue">$2 T</div>
+                        <div class="metric-change">~83x growth potential</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Optimistic Projection (2034)</div>
+                        <div class="metric-value purple">$30 T</div>
+                        <div class="metric-change">Historical precedent achieved</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Total Addressable Market</div>
+                        <div class="metric-value orange">$867 T</div>
+                        <div class="metric-change">Global RWA value</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <h3>Market Growth Trajectory</h3>
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Tokenization Penetration</h3>
+                    <div class="chart-container">
+                        <canvas id="penetrationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="section-title">Market Segments Distribution</h3>
+            <div class="card">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="segmentsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Key Insight:</strong> The tokenized RWA market currently represents only 0.001346% of the global RWA market ($867T), indicating enormous untapped potential for expansion as adoption accelerates.</p>
+            </div>
+        </div>
+
+        <!-- Digital Assets & Tokens Tab -->
+        <div id="tokens" class="tab-content">
+            <h3 class="section-title">Token Standards & Classification</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>ERC-20 Standard</h4>
+                    <p>Fungible tokens enabling seamless exchange of identical units. Most widely used for cryptocurrencies and utility tokens.</p>
+                    <span class="badge">Fungible</span>
+                    <span class="badge green">Production Ready</span>
+                </div>
+                <div class="feature-card">
+                    <h4>ERC-721 Standard</h4>
+                    <p>Non-fungible tokens representing unique assets with distinct properties. Perfect for digital art, real estate, and collectibles.</p>
+                    <span class="badge">Non-Fungible</span>
+                    <span class="badge purple">NFTs</span>
+                </div>
+                <div class="feature-card">
+                    <h4>ERC-1155 Standard</h4>
+                    <p>Multi-token standard combining fungible and non-fungible tokens within a single contract for improved efficiency.</p>
+                    <span class="badge">Hybrid</span>
+                    <span class="badge orange">Advanced</span>
+                </div>
+                <div class="feature-card">
+                    <h4>Security Tokens</h4>
+                    <p>Regulated tokenized representations of securities (stocks, bonds, funds) subject to compliance mechanisms.</p>
+                    <span class="badge">Regulated</span>
+                    <span class="badge green">Compliant</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">Adoption Drivers</h3>
+            <div class="card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Driver</th>
+                                <th>Impact</th>
+                                <th>Status</th>
+                                <th>Timeline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Institutional Adoption</strong></td>
+                                <td>Banks launching tokenization pilots</td>
+                                <td>In Progress</td>
+                                <td>2025-2026</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Regulatory Sandboxes</strong></td>
+                                <td>Global regulators creating frameworks</td>
+                                <td>Active</td>
+                                <td>Ongoing</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cross-Chain Integration</strong></td>
+                                <td>Multi-network asset movement</td>
+                                <td>Developing</td>
+                                <td>2026-2027</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Retail Access</strong></td>
+                                <td>Simplified interfaces and wallets</td>
+                                <td>Emerging</td>
+                                <td>2025-2026</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Market Drivers:</strong> Major developments include institutional adoption through pilot projects, regulatory sandboxes enabling safe exploration, improved interoperability across blockchains, and simplified retail access through intuitive wallet solutions.</p>
+            </div>
+        </div>
+
+        <!-- Smart Contracts Tab -->
+        <div id="contracts" class="tab-content">
+            <h3 class="section-title">Smart Contract Characteristics</h3>
+            <div class="grid">
+                <div class="card">
+                    <h3>Deterministic Execution</h3>
+                    <p style="color: var(--text-secondary);">Code executes exactly as written, without ambiguity or human intervention</p>
+                </div>
+                <div class="card">
+                    <h3>Immutability</h3>
+                    <p style="color: var(--text-secondary);">Once deployed, contract logic cannot be altered retroactively, ensuring code integrity</p>
+                </div>
+                <div class="card">
+                    <h3>Transparency</h3>
+                    <p style="color: var(--text-secondary);">All contract terms and execution history are publicly verifiable on-chain</p>
+                </div>
+                <div class="card">
+                    <h3>Cost Efficiency</h3>
+                    <p style="color: var(--text-secondary);">Automation reduces administrative overhead and transaction costs significantly</p>
+                </div>
+            </div>
+
+            <h3 class="section-title">RWA Management Applications</h3>
+            <div class="card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Application</th>
+                                <th>Function</th>
+                                <th>Benefit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Dividend Distribution</strong></td>
+                                <td>Automatic income streams to token holders</td>
+                                <td>Eliminates payment delays &amp; intermediaries</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Asset Management</strong></td>
+                                <td>Rent collection, maintenance scheduling</td>
+                                <td>Reduces administrative overhead</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Governance</strong></td>
+                                <td>Token holder voting on decisions</td>
+                                <td>Democratic, transparent participation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Compliance</strong></td>
+                                <td>Embed regulatory rules automatically</td>
+                                <td>Ensures accredited investor access</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Marketplace</strong></td>
+                                <td>Peer-to-peer trading facilitation</td>
+                                <td>Instantaneous settlement &amp; pricing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="section-title">DeFi Maturity Indicators</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>🎯 Limit Orders</h4>
+                    <p>Advanced order types now available on-chain, previously exclusive to traditional finance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌉 Cross-Chain Functionality</h4>
+                    <p>Contracts operating across multiple blockchain networks, reducing fragmentation.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🤖 AI-Assisted Management</h4>
+                    <p>Integration of artificial intelligence for automated portfolio rebalancing.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Fast Settlement</h4>
+                    <p>Transactions settle in minutes versus T+2 in traditional finance markets.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decentralized Identity Tab -->
+        <div id="identity" class="tab-content">
+            <h3 class="section-title">Core DID Components</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>Self-Sovereign Identity (SSI)</h4>
+                    <p>Users maintain complete control over personal data and credentials, sharing only necessary information for transactions without relying on centralized authorities.</p>
+                    <span class="badge green">User-Centric</span>
+                </div>
+                <div class="feature-card">
+                    <h4>Verifiable Credentials</h4>
+                    <p>Cryptographically verifiable claims about identity attributes instantly validated by counterparties without third-party intermediaries.</p>
+                    <span class="badge">Trustless</span>
+                </div>
+                <div class="feature-card">
+                    <h4>Wallet-Based Management</h4>
+                    <p>Credentials stored in user-controlled digital wallets, eliminating single points of failure and data breach risks.</p>
+                    <span class="badge green">Secure</span>
+                </div>
+                <div class="feature-card">
+                    <h4>Privacy Protection</h4>
+                    <p>Users control disclosure granularity, sharing only information necessary for specific transactions.</p>
+                    <span class="badge purple">Privacy-First</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">Financial Applications</h3>
+            <div class="card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Use Case</th>
+                                <th>Implementation</th>
+                                <th>Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>KYC/AML Compliance</strong></td>
+                                <td>Portable credentials instant validation</td>
+                                <td>Reduces onboarding friction while maintaining compliance</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cross-Border Transactions</strong></td>
+                                <td>Universal digital identity protocols</td>
+                                <td>Eliminates multiple verification requirements</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Financial Inclusion</strong></td>
+                                <td>Alternative verification methods</td>
+                                <td>Serves unbanked populations without traditional documentation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Privacy Protection</strong></td>
+                                <td>Granular disclosure control</td>
+                                <td>Maintains confidentiality while enabling participation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Financial Inclusion Impact:</strong> DID enables individuals without traditional banking documentation to establish verified digital identity through alternative methods, unlocking access to global tokenized financial services.</p>
+            </div>
+        </div>
+
+        <!-- Stablecoins Tab -->
+        <div id="stablecoins" class="tab-content">
+            <h3 class="section-title">Stablecoin Types & Architecture</h3>
+            <div class="grid">
+                <div class="card">
+                    <h3>Fiat-Collateralized</h3>
+                    <p style="color: var(--text-secondary);">Backed 1:1 by reserve holdings (USDC, USDT). Most adopted category with institutional backing.</p>
+                    <span class="badge green">Production Ready</span>
+                </div>
+                <div class="card">
+                    <h3>Crypto-Collateralized</h3>
+                    <p style="color: var(--text-secondary);">Backed by crypto reserves exceeding 100% supply (DAI). Requires complex liquidation mechanisms.</p>
+                    <span class="badge orange">Advanced</span>
+                </div>
+                <div class="card">
+                    <h3>Commodity-Backed</h3>
+                    <p style="color: var(--text-secondary);">Backed by physical commodities like gold. Enables value storage without fiat exposure.</p>
+                    <span class="badge">Alternative</span>
+                </div>
+                <div class="card">
+                    <h3>RWA-Backed Hybrid</h3>
+                    <p style="color: var(--text-secondary);">Leverage real-world assets as backing. Improves stability while generating yields.</p>
+                    <span class="badge purple">Emerging</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">Utility & Market Applications</h3>
+            <div class="card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Application</th>
+                                <th>Description</th>
+                                <th>Advantage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Payment Infrastructure</strong></td>
+                                <td>Cross-border payments without volatility</td>
+                                <td>Settlement in minutes vs. traditional banking days</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DeFi Foundation</strong></td>
+                                <td>Medium of exchange in protocols</td>
+                                <td>Primary collateral and liquidity source</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Yield Generation</strong></td>
+                                <td>RWA-backed coins generate returns</td>
+                                <td>Returns distributed to stablecoin holders</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Merchant Integration</strong></td>
+                                <td>Merchant acceptance without FX risk</td>
+                                <td>Facilitates retail cryptocurrency adoption</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Treasury Management</strong></td>
+                                <td>Corporate liquidity and expense payment</td>
+                                <td>Operational efficiency in multinational operations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="section-title">Regulatory Evolution</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>📋 Reserve Requirements</h4>
+                    <p>Reserve adequacy and transparency requirements ensuring stablecoin backing adequacy.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🛡️ Consumer Protection</h4>
+                    <p>Redemption guarantees and consumer safeguards establishing holder confidence.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💼 Capital Standards</h4>
+                    <p>Capital requirements for issuers ensuring financial stability and resilience.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌐 Global Harmonization</h4>
+                    <p>Cross-border regulatory harmonization facilitating international operations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-World Assets Tab -->
+        <div id="rwa" class="tab-content">
+            <h3 class="section-title">RWA Market Overview</h3>
+            <div class="grid">
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Current RWA Market</div>
+                        <div class="metric-value green">$24 B</div>
+                        <div class="metric-change">↑ 308% in 3 years</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Tokenization Penetration</div>
+                        <div class="metric-value blue">0.0014%</div>
+                        <div class="metric-change">Massive growth runway</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">2030 Projection</div>
+                        <div class="metric-value purple">$2 T</div>
+                        <div class="metric-change">~83x growth potential</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="metric">
+                        <div class="metric-label">Total Addressable</div>
+                        <div class="metric-value orange">$867 T</div>
+                        <div class="metric-change">Global RWA value</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="section-title">Asset Classes for Tokenization</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>🏠 Real Estate & Property</h4>
+                    <p>Fractional ownership of commercial, residential, and development projects. Smart contracts automate rent collection and property management.</p>
+                    <span class="badge green">Mainstream</span>
+                </div>
+                <div class="feature-card">
+                    <h4>📦 Commodities</h4>
+                    <p>Agricultural products, precious metals, and energy commodities. Blockchain-recorded provenance enables traceability.</p>
+                    <span class="badge">Production</span>
+                </div>
+                <div class="feature-card">
+                    <h4>📈 Securities</h4>
+                    <p>Equities, bonds, and fund shares with accelerated settlement and fractional ownership enabling democratized access.</p>
+                    <span class="badge green">Regulated</span>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Infrastructure</h4>
+                    <p>Renewable energy, water, and transportation projects. Enables retail participation in institutional-only investments.</p>
+                    <span class="badge">Emerging</span>
+                </div>
+                <div class="feature-card">
+                    <h4>🎨 Collectibles & IP</h4>
+                    <p>Digital and physical collectibles, art, music rights, and patents enabling fractional ownership and new revenue models.</p>
+                    <span class="badge purple">NFT-Based</span>
+                </div>
+                <div class="feature-card">
+                    <h4>💎 Exotic Assets</h4>
+                    <p>Fine wines, watches, rare items, and other alternative assets brought to digital markets.</p>
+                    <span class="badge orange">Niche</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">Operational Advantages</h3>
+            <div class="card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Advantage</th>
+                                <th>Traditional Finance</th>
+                                <th>Tokenized RWA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Trading Hours</strong></td>
+                                <td>Limited to market hours</td>
+                                <td>24/7 continuous trading</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Minimum Investment</strong></td>
+                                <td>Often $100K-$1M+</td>
+                                <td>$100-$1K fractional access</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Settlement Cycle</strong></td>
+                                <td>T+2 (2-3 days)</td>
+                                <td>Minutes on-chain</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transaction Costs</strong></td>
+                                <td>1-5% intermediary fees</td>
+                                <td>0.1-0.5% smart contract fees</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Geographic Access</strong></td>
+                                <td>Limited by regulation</td>
+                                <td>Global access via internet</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transparency</strong></td>
+                                <td>Limited history access</td>
+                                <td>Immutable transaction records</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="section-title">RWA Tokenization Pipeline</h3>
+            <div class="card">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="pipelineChart"></canvas>
+                </div>
+            </div>
+
+            <h3 class="section-title">Emerging Opportunities</h3>
+            <div class="grid">
+                <div class="feature-card">
+                    <h4>🌉 Cross-Chain Trading</h4>
+                    <p>RWAs traded across multiple blockchain networks, reducing fragmentation and expanding liquidity pools globally.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎭 Synthetic RWAs</h4>
+                    <p>Digital derivatives enabling exposure to RWA performance without physical ownership, facilitating hedging strategies.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🤖 AI Portfolio Management</h4>
+                    <p>Dynamic algorithms adjust RWA composition based on market conditions, yield curves, and risk assessments automatically.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Supply Chain Integration</h4>
+                    <p>RWA tokenization extends to supply chain transparency, enabling automated payment upon delivery verification.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-button');
+            
+            contents.forEach(content => content.classList.remove('active'));
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Chart initialization
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#cbd5e1', font: { size: 12, weight: 600 } }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(6, 182, 212, 0.1)' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(6, 182, 212, 0.1)' } }
+            }
+        };
+
+        // Market Growth Chart
+        new Chart(document.getElementById('growthChart'), {
+            type: 'line',
+            data: {
+                labels: ['2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+                datasets: [{
+                    label: 'Tokenized RWA Market ($B)',
+                    data: [1.2, 2.8, 8, 24, 80, 250, 600, 1200, 2000],
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#06b6d4'
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Market Penetration Chart
+        new Chart(document.getElementById('penetrationChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tokenized RWA', 'Potential Tokenizable'],
+                datasets: [{
+                    data: [0.001346, 99.998654],
+                    backgroundColor: ['#06b6d4', 'rgba(6, 182, 212, 0.2)'],
+                    borderColor: '#1e293b'
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Market Segments Chart
+        new Chart(document.getElementById('segmentsChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Real Estate', 'Commodities', 'Securities', 'Infrastructure', 'Collectibles', 'Other'],
+                datasets: [{
+                    label: 'Market Share (%)',
+                    data: [35, 20, 25, 12, 5, 3],
+                    backgroundColor: [
+                        '#06b6d4',
+                        '#0284c7',
+                        '#3b82f6',
+                        '#8b5cf6',
+                        '#f97316',
+                        '#10b981'
+                    ]
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Tokenization Pipeline Chart
+        new Chart(document.getElementById('pipelineChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Asset Selection', 'Legal Structure', 'Smart Contracts', 'Custody', 'Token Issuance', 'Exchange Listing', 'Monitoring'],
+                datasets: [{
+                    label: 'Completion Rate (%)',
+                    data: [95, 85, 80, 75, 70, 60, 50],
+                    backgroundColor: 'rgba(6, 182, 212, 0.8)'
+                }]
+            },
+            options: {
+                ...chartOptions,
+                indexAxis: 'y'
+            }
+        });
+    </script>
+</body>
+</html>
